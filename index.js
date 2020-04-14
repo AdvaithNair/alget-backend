@@ -1,8 +1,10 @@
 const { GraphQLServer } = require('./node_modules/graphql-yoga/dist');
 const mongoose = require("mongoose");
 
+//Connects to my MongoDB
 mongoose.connect("mongodb://localhost/aglet");
 
+//Models Schema
 const Sneaker = mongoose.model('Sneaker', {
   name: String,
   ranking: { type: Number, min: 1, max: 100 },
@@ -11,17 +13,10 @@ const Sneaker = mongoose.model('Sneaker', {
   ownership: Boolean
 });
 
-//OLD ToDo Database
-/*mongoose.connect("mongodb://localhost/test1");
-
-const Todo = mongoose.model('Todo', {
-    text: String,
-    complete: Boolean
-});*/
-
+//Lists Query, Sneaker, and Mutation Types
 const typeDefs = `
   type Query {
-    getList: Sneaker
+    getList: [Sneaker]
   }
   type Sneaker {
     id: ID!
@@ -33,35 +28,27 @@ const typeDefs = `
   }
   type Mutation {
     createSneaker(name: String!, ranking: Int!, price: Float!, colorway: String!, ownership: Boolean!): Sneaker
-    updateName(id: ID!, name: String!): Boolean
-    updateRanking(id: ID!, ranking: Int!): Boolean
-    updateOwnership(id: ID!, ownership: Boolean!): Boolean
+    updateSneaker(id: ID!, name: String, ranking: Int, price: Float, colorway: String, ownership: Boolean): Boolean
     deleteSneaker(id: ID!): Boolean
   }
 `
 ;
 
+//Specifies what to do with each query or mutation
 const resolvers = {
   Query: {
     getList: () => Sneaker.find(),
   },
   Mutation: {
     createSneaker: async (_, {name, ranking, price, colorway, ownership}) => {
-        const new_sneaker = new Sneaker({name, ranking, price, colorway, ownership});
+        //TRY CATCH
+        const new_sneaker = new Sneaker({name, parseInt(ranking), parseFloat(price), colorway, ownership});
         await new_sneaker.save();
         return new_sneaker;
     },
-    updateName: async(_, {id, name}) => {
-      await Sneaker.findByIdAndUpdate(id, {name});
+    updateSneaker: async(_, {id, name, ranking, price, colorway, ownership}) => {
+      await Sneaker.findByIdAndUpdate(id, {name, ranking, price, colorway, ownership});
       return true;
-    },
-    updateRanking: async(_, {id, ranking}) => {
-      await Sneaker.findByIdAndUpdate(id, {ownership});
-      return true;
-    },
-    updateOwnership: async(_, {id, ownership}) => {
-        await Sneaker.findByIdAndUpdate(id, {ownership});
-        return true;
     },
     deleteSneaker: async(_, {id}) => {
         await Sneaker.findByIdAndRemove(id);
@@ -70,6 +57,7 @@ const resolvers = {
   }
 };
 
+//Connects Database and Creates Server
 const server = new GraphQLServer({ typeDefs, resolvers });
 mongoose.connection.once('open', function() {
     server.start(() => console.log('Server is running on localhost:4000'));
