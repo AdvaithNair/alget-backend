@@ -1,2 +1,2 @@
-# alget-server
+# alget-backend
 Server code for Aglet
