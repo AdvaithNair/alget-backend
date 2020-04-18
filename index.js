@@ -29,6 +29,7 @@ const typeDefs = `
   type Mutation {
     createSneaker(name: String!, ranking: Int!, price: Float!, colorway: String!, ownership: Boolean!): Sneaker
     updateSneaker(id: ID!, name: String, ranking: Int, price: Float, colorway: String, ownership: Boolean): Boolean
+    updateOwnership(id: ID!, ownership: Boolean!): Boolean
     deleteSneaker(id: ID!): Boolean
   }
 `
@@ -41,18 +42,21 @@ const resolvers = {
   },
   Mutation: {
     createSneaker: async (_, {name, ranking, price, colorway, ownership}) => {
-        //TRY CATCH
-        const new_sneaker = new Sneaker({name, parseInt(ranking), parseFloat(price), colorway, ownership});
-        await new_sneaker.save();
-        return new_sneaker;
+      const new_sneaker = new Sneaker({name, ranking, price, colorway, ownership});
+      await new_sneaker.save();
+      return new_sneaker;
     },
     updateSneaker: async(_, {id, name, ranking, price, colorway, ownership}) => {
       await Sneaker.findByIdAndUpdate(id, {name, ranking, price, colorway, ownership});
       return true;
     },
+    updateOwnership: async(_, {id, ownership}) => {
+      await Sneaker.findByIdAndUpdate(id, {ownership});
+      return true;
+    },
     deleteSneaker: async(_, {id}) => {
-        await Sneaker.findByIdAndRemove(id);
-        return true;
+      await Sneaker.findByIdAndRemove(id);
+      return true;
     }
   }
 };
